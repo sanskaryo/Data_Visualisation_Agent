@@ -9,23 +9,21 @@ export const ProjectInfo = () => {
       <Alert className="bg-muted text-muted-foreground border-0">
         <Info className="h-4 w-4 text-primary" />
         <AlertDescription>
-          This application uses the{" "}
+          This application is created by AI TASK FORCE {" "}
           <Link
             target="_blank"
             className="text-primary hover:text-primary/90 underline"
-            href="https://sdk.vercel.ai"
+            href="https://www.gla.ac.in/"
           >
-            AI SDK
+            
           </Link>{" "}
-          to allow you to query a PostgreSQL database with natural language. The
-          dataset is CB Insights&apos; list of all unicorn companies. Learn more
-          at{" "}
+          to Analyse  Placement Stats of {" "}
           <Link
-            href="https://www.cbinsights.com/research-unicorn-companies"
+            href="https://www.gla.ac.in/"
             target="_blank"
             className="text-primary hover:text-primary/90 underline"
           >
-            CB Insights
+            GLA University
           </Link>
           .
           <div className="mt-4 sm:hidden">

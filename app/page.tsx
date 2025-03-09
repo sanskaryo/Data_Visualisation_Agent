@@ -129,8 +129,8 @@ export default function Page() {
                           <Loader2 className="h-12 w-12 animate-spin text-muted-foreground" />
                           <p className="text-foreground">
                             {loadingStep === 1
-                              ? "Generating SQL query..."
-                              : "Running SQL query..."}
+                              ? "Analysing the query..."
+                              : "Running the query..."}
                           </p>
                         </div>
                       ) : results.length === 0 ? (

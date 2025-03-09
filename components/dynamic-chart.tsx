@@ -10,11 +10,15 @@ import {
   AreaChart,
   Pie,
   PieChart,
+  ScatterChart,
+  Scatter,
   Cell,
   XAxis,
   YAxis,
   CartesianGrid,
   Legend,
+  Tooltip as RechartsTooltip,
+  Label,
 } from "recharts";
 import {
   ChartContainer,
@@ -22,7 +26,6 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { Config, Result } from "@/lib/types";
-import { Label } from "recharts";
 import { transformDataForMultiLineChart } from "@/lib/rechart-format";
 
 function toTitleCase(str: string): string {
@@ -31,6 +34,7 @@ function toTitleCase(str: string): string {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 }
+
 const colors = [
   "hsl(var(--chart-1))",
   "hsl(var(--chart-2))",
@@ -51,6 +55,8 @@ export function DynamicChart({
 }) {
   const renderChart = () => {
     if (!chartData || !chartConfig) return <div>No chart data</div>;
+
+    // Convert numeric fields to numbers
     const parsedChartData = chartData.map((item) => {
       const parsedItem: { [key: string]: any } = {};
       for (const [key, value] of Object.entries(item)) {
@@ -61,20 +67,16 @@ export function DynamicChart({
 
     chartData = parsedChartData;
 
+    // Limit or transform data if needed
     const processChartData = (data: Result[], chartType: string) => {
       if (chartType === "bar" || chartType === "pie") {
-        if (data.length <= 8) {
-          return data;
-        }
-
-        const subset = data.slice(0, 20);
-        return subset;
+        // Example: limit to first 20 data points
+        return data.length <= 20 ? data : data.slice(0, 20);
       }
       return data;
     };
 
     chartData = processChartData(chartData, chartConfig.type);
-    // console.log({ chartData, chartConfig });
 
     switch (chartConfig.type) {
       case "bar":
@@ -90,23 +92,28 @@ export function DynamicChart({
             </XAxis>
             <YAxis>
               <Label
-                value={toTitleCase(chartConfig.yKeys[0])}
+                value={toTitleCase(chartConfig.yKeys.join(", "))}
                 angle={-90}
                 position="insideLeft"
               />
             </YAxis>
             <ChartTooltip content={<ChartTooltipContent />} />
             {chartConfig.legend && <Legend />}
-            {chartConfig.yKeys.map((key, index) => (
-              <Bar
-                key={key}
-                dataKey={key}
-                fill={colors[index % colors.length]}
-              />
+      
+            {/* For each yKey, create a bar and map over each data point for unique color. */}
+            {chartConfig.yKeys.map((key, seriesIndex) => (
+              <Bar key={key} dataKey={key}>
+                {chartData.map((_, dataIndex) => (
+                  <Cell
+                    key={`cell-${dataIndex}`}
+                    fill={colors[(dataIndex + seriesIndex) % colors.length]}
+                  />
+                ))}
+              </Bar>
             ))}
           </BarChart>
         );
-      case "line":
+      case "line": {
         const { data, xAxisField, lineFields } = transformDataForMultiLineChart(
           chartData,
           chartConfig,
@@ -115,58 +122,52 @@ export function DynamicChart({
           chartConfig.multipleLines &&
           chartConfig.measurementColumn &&
           chartConfig.yKeys.includes(chartConfig.measurementColumn);
-        // console.log(useTransformedData, "useTransformedData");
-        // const useTransformedData = false;
-        return (
-          <LineChart data={useTransformedData ? data : chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis
-              dataKey={useTransformedData ? chartConfig.xKey : chartConfig.xKey}
-            >
-              <Label
-                value={toTitleCase(
-                  useTransformedData ? xAxisField : chartConfig.xKey,
-                )}
-                offset={0}
-                position="insideBottom"
-              />
-            </XAxis>
-            <YAxis>
-              <Label
-                value={toTitleCase(chartConfig.yKeys[0])}
-                angle={-90}
-                position="insideLeft"
-              />
-            </YAxis>
-            <ChartTooltip content={<ChartTooltipContent />} />
-            {chartConfig.legend && <Legend />}
-            {useTransformedData
-              ? lineFields.map((key, index) => (
-                  <Line
-                    key={key}
-                    type="monotone"
-                    dataKey={key}
-                    stroke={colors[index % colors.length]}
+
+          return (
+            <div>
+              <LineChart data={useTransformedData ? data : chartData} width={700} height={300}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey={chartConfig.xKey}>
+                  <Label
+                    value={toTitleCase(useTransformedData ? xAxisField : chartConfig.xKey)}
+                    offset={0}
+                    position="insideBottom"
                   />
-                ))
-              : chartConfig.yKeys.map((key, index) => (
-                  <Line
-                    key={key}
-                    type="monotone"
-                    dataKey={key}
-                    stroke={colors[index % colors.length]}
+                </XAxis>
+                <YAxis>
+                  <Label
+                    value={toTitleCase(chartConfig.yKeys[0])}
+                    angle={-90}
+                    position="insideLeft"
                   />
-                ))}
-          </LineChart>
-        );
-      case "area":
-        return (
-          <AreaChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey={chartConfig.xKey} />
-            <YAxis />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            {chartConfig.legend && <Legend />}
+                </YAxis>
+                <ChartTooltip content={<ChartTooltipContent />} />
+                {chartConfig.legend && <Legend />}
+          
+                {useTransformedData
+                  ? lineFields.map((key, index) => (
+                      <Line
+                        key={key}
+                        type="monotone"
+                        dataKey={key}
+                        stroke={colors[index % colors.length]}
+                      />
+                    ))
+                  : chartConfig.yKeys.map((key, index) => (
+                      <Line
+                        key={key}
+                        type="monotone"
+                        dataKey={key}
+                        stroke={colors[index % colors.length]}
+                      />
+                    ))}
+              </LineChart>
+            </div>
+          );
+          
+
+            {/* If you want an area overlay, render it here or in case "area": */}
+            {/* 
             {chartConfig.yKeys.map((key, index) => (
               <Area
                 key={key}
@@ -176,8 +177,10 @@ export function DynamicChart({
                 stroke={colors[index % colors.length]}
               />
             ))}
-          </AreaChart>
-        );
+        //     */}
+        //   </>
+        // );
+      }
       case "pie":
         return (
           <PieChart>
@@ -200,6 +203,79 @@ export function DynamicChart({
             {chartConfig.legend && <Legend />}
           </PieChart>
         );
+      case "scatter":
+        return (
+          <ScatterChart>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis
+              type="number"
+              dataKey={chartConfig.xKey}
+              name={toTitleCase(chartConfig.xKey)}
+            >
+              <Label
+                value={toTitleCase(chartConfig.xKey)}
+                offset={0}
+                position="insideBottom"
+              />
+            </XAxis>
+            <YAxis
+              type="number"
+              dataKey={chartConfig.yKeys[0]}
+              name={toTitleCase(chartConfig.yKeys[0])}
+            >
+              <Label
+                value={toTitleCase(chartConfig.yKeys[0])}
+                angle={-90}
+                position="insideLeft"
+              />
+            </YAxis>
+            {chartConfig.legend && <Legend />}
+            <RechartsTooltip content={<ChartTooltipContent />} />
+            <Scatter
+              name={toTitleCase(chartConfig.yKeys[0])}
+              data={chartData}
+              fill={colors[0]}
+            />
+          </ScatterChart>
+        );
+
+        case "area": {
+          return (
+            <AreaChart data={chartData} width={500} height={300}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey={chartConfig.xKey}>
+                <Label
+                  value={toTitleCase(chartConfig.xKey)}
+                  offset={0}
+                  position="insideBottom"
+                />
+              </XAxis>
+              <YAxis>
+                <Label
+                  value={toTitleCase(chartConfig.yKeys.join(", "))}
+                  angle={-90}
+                  position="insideLeft"
+                />
+              </YAxis>
+              <ChartTooltip content={<ChartTooltipContent />} />
+              {chartConfig.legend && <Legend />}
+        
+              {/* For each yKey, create an area. */}
+              {chartConfig.yKeys.map((key, index) => (
+                <Area
+                  key={key}
+                  type="monotone"
+                  dataKey={key}
+                  fill={colors[index % colors.length]}
+                  stroke={colors[index % colors.length]}
+                />
+              ))}
+            </AreaChart>
+          );
+        }
+
+
+
       default:
         return <div>Unsupported chart type: {chartConfig.type}</div>;
     }

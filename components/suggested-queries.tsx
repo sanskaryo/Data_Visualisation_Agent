@@ -7,55 +7,93 @@ export const SuggestedQueries = ({
   handleSuggestionClick: (suggestion: string) => void;
 }) => {
   const suggestionQueries = [
+    
     {
-      desktop: "Compare count of unicorns in SF and NY over time",
-      mobile: "SF vs NY",
+      desktop: "Which company offered the highest average package?",
+      mobile: "Highest package",
     },
     {
-      desktop: "Compare unicorn valuations in the US vs China over time",
-      mobile: "US vs China",
+      desktop: "Number of students placed in each company",
+      mobile: "Company counts",
+    },
+   
+  
+    
+    {
+      desktop: "Which location has the highest average 10th percentage?",
+      mobile: "Top 10th city",
+    },
+  
+    {
+      desktop: "Show a bar chart of the number of students placed per company",
+      mobile: "Company bar chart",
+    },
+ 
+
+    {
+      desktop: "Plot a scatter plot of CPI vs Package",
+      mobile: "CPI vs Package",
     },
     {
-      desktop: "Countries with highest unicorn density",
-      mobile: "Top countries",
+      desktop: "Which company hired the most students?",
+      mobile: "Top recruiter",
+    },
+  
+    {
+      desktop: "List students with CPI above 9.5 and package above 10 LPA",
+      mobile: "Top scorers",
     },
     {
-      desktop:
-        "Show the number of unicorns founded each year over the past two decades",
-      mobile: "Yearly count",
+      desktop: "Show a chart of CPI distribution",
+      mobile: "CPI histogram",
     },
     {
-      desktop: "Display the cumulative total valuation of unicorns over time",
-      mobile: "Total value",
+      desktop: "Show me academic records of students placed in Amazon",
+      mobile: "Data summary",
     },
     {
-      desktop:
-        "Compare the yearly funding amounts for fintech vs healthtech unicorns",
-      mobile: "Fintech vs health",
+      desktop: "List all students placed in Google",
+      mobile: "Google hires",
     },
     {
-      desktop: "Which cities have with most SaaS unicorns",
-      mobile: "SaaS cities",
+      desktop: "How many students secured a package above 12 LPA?",
+      mobile: "Above 12 LPA",
     },
     {
-      desktop: "Show the countries with highest unicorn density",
-      mobile: "Dense nations",
+      desktop: "Display an area chart of average package over CPI ranges",
+      mobile: "Average package by CPI",
+    },
+
+    {
+      desktop: "How many students got placed in Bangalore?",
+      mobile: "Bangalore placements",
+    },
+
+    {
+      desktop: "Which company has the widest salary range?",
+      mobile: "Salary range",
     },
     {
-      desktop:
-        "Show the number of unicorns (grouped by year) over the past decade",
-      mobile: "Decade trend",
+      desktop: "List students who got more than 15 LPA package",
+      mobile: "Above 15 LPA",
     },
+
     {
-      desktop:
-        "Compare the average valuation of AI companies vs. biotech companies",
-      mobile: "AI vs biotech",
+      desktop: "Which company placed the highest CPI students?",
+      mobile: "Top CPI recruiters",
     },
+  
     {
-      desktop: "Investors with the most unicorns",
-      mobile: "Top investors",
+      desktop: "Show number of students placed by Role in pi chart",
+      mobile: "Placed by role",
     },
+ 
+    {
+      desktop: "Scatter plot of Package vs 12th percentage.",
+      mobile: "12th % comparison",
+    }
   ];
+  
 
   return (
     <motion.div
