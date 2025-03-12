@@ -84,5 +84,5 @@ export const configSchema = z
   })
   .describe("Chart configuration object");
 
-// This type will include scatter if you keep it in the enum
 export type Config = z.infer<typeof configSchema>;
+export type ChartData = Result[];

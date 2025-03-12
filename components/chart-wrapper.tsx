@@ -1,29 +1,18 @@
 // "use client";
 
 // import dynamic from "next/dynamic";
-// import ChartWrapper from "@/components/chart-wrapper";
+// import { ChartConfig, ChartData } from "@/types"; // Adjust the path as needed
 
-// // Dynamically import the chart with SSR disabled
-// const DynamicChartNoSSR = dynamic(() => import("./dynamic-chart"), {
+// // Dynamically import the DynamicChart component with SSR disabled
+// const DynamicChartNoSSR = dynamic(() => import("./dynamic-chart").then((mod) => mod.default) as any, {
 //   ssr: false,
 // });
 
-// // Then simply export a wrapper or directly render it
-// export default function ChartWrapper({
-//   chartData,
-//   chartConfig,
-// }: {
-//   chartData: any;
-//   chartConfig: any;
-// }) {
-//   return (
-//     <DynamicChartNoSSR chartData={chartData} chartConfig={chartConfig} />
-//   );
+// interface ChartWrapperProps {
+//   chartData: ChartData;
+//   chartConfig: ChartConfig;
 // }
 
-// export default function SomePageOrComponent() {
-//   const data = [...];        // chart data
-//   const config = {...};      // chart config
-
-//   return <ChartWrapper chartData={data} chartConfig={config} />;
+// export default function ChartWrapper({ chartData, chartConfig }: ChartWrapperProps) {
+//   return <DynamicChartNoSSR chartData={chartData} chartConfig={chartConfig} />;
 // }

@@ -13,15 +13,15 @@ export const SuggestedQueries = ({
       mobile: "Highest package",
     },
     {
-      desktop: "Number of students placed in each company",
+      desktop: "Get the average CPI of all placed students in IBM",
       mobile: "Company counts",
     },
    
   
     
     {
-      desktop: "Which location has the highest average 10th percentage?",
-      mobile: "Top 10th city",
+      desktop: "Package range  for different job roles",
+      mobile: "Package range ",
     },
   
     {
@@ -31,8 +31,8 @@ export const SuggestedQueries = ({
  
 
     {
-      desktop: "Plot a scatter plot of CPI vs Package",
-      mobile: "CPI vs Package",
+      desktop: "Distribution of students who did internships before placement.",
+      mobile: "Distribution of students",
     },
     {
       desktop: "Which company hired the most students?",
@@ -55,10 +55,7 @@ export const SuggestedQueries = ({
       desktop: "List all students placed in Google",
       mobile: "Google hires",
     },
-    {
-      desktop: "How many students secured a package above 12 LPA?",
-      mobile: "Above 12 LPA",
-    },
+
     {
       desktop: "Display an area chart of average package over CPI ranges",
       mobile: "Average package by CPI",
@@ -74,8 +71,8 @@ export const SuggestedQueries = ({
       mobile: "Salary range",
     },
     {
-      desktop: "List students who got more than 15 LPA package",
-      mobile: "Above 15 LPA",
+      desktop: "List students who got more than 9 LPA package",
+      mobile: "Above 9 LPA",
     },
 
     {
@@ -89,8 +86,8 @@ export const SuggestedQueries = ({
     },
  
     {
-      desktop: "Scatter plot of Package vs 12th percentage.",
-      mobile: "12th % comparison",
+      desktop: "Average package in different locations .",
+      mobile: "Average package in different locations",
     }
   ];
   

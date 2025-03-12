@@ -1,5 +1,5 @@
-import { Config, Result, Unicorn } from "@/lib/types";
-import { DynamicChart } from "./dynamic-chart";
+import { Config, Result } from "@/lib/types";
+import { DynamicChart } from "./dynamic-chart"; // Import DynamicChart
 import { SkeletonCard } from "./skeleton-card";
 import {
   TableHeader,
@@ -75,7 +75,7 @@ export const Results = ({
                   {columns.map((column, index) => (
                     <TableHead
                       key={index}
-                      className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
+                      className="px-6 py-3 text-left text-base font-medium text-muted-foreground uppercase tracking-wider"
                     >
                       {formatColumnTitle(column)}
                     </TableHead>
@@ -88,11 +88,11 @@ export const Results = ({
                     {columns.map((column, cellIndex) => (
                       <TableCell
                         key={cellIndex}
-                        className="px-6 py-4 whitespace-nowrap text-sm text-foreground"
+                        className="px-6 py-4 whitespace-nowrap text-base text-foreground"
                       >
                         {formatCellValue(
                           column,
-                          company[column as keyof Unicorn],
+                          company[column as keyof Result],
                         )}
                       </TableCell>
                     ))}

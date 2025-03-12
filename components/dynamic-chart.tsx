@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Bar,
   BarChart,
@@ -53,6 +53,16 @@ export function DynamicChart({
   chartData: Result[];
   chartConfig: Config;
 }) {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return null;
+  }
+
   const renderChart = () => {
     if (!chartData || !chartConfig) return <div>No chart data</div>;
 

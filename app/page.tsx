@@ -82,15 +82,15 @@ export default function Page() {
   };
 
   return (
-    <div className="bg-neutral-50 dark:bg-neutral-900 flex items-start justify-center p-0 sm:p-8">
-      <div className="w-full max-w-4xl min-h-dvh sm:min-h-0 flex flex-col ">
+    <div className="bg-neutral-50 dark:bg-neutral-900 flex items-start justify-center p-4 sm:p-8">
+      <div className="w-full max-w-6xl min-h-dvh sm:min-h-0 flex flex-col">
         <motion.div
           className="bg-card rounded-xl sm:border sm:border-border flex-grow flex flex-col"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
         >
-          <div className="p-6 sm:p-8 flex flex-col flex-grow">
+          <div className="p-4 sm:p-8 flex flex-col flex-grow">
             <Header handleClear={handleClear} />
             <Search
               handleClear={handleClear}
@@ -125,9 +125,9 @@ export default function Page() {
                         />
                       )}
                       {loading ? (
-                        <div className="h-full absolute bg-background/50 w-full flex flex-col items-center justify-center space-y-4">
-                          <Loader2 className="h-12 w-12 animate-spin text-muted-foreground" />
-                          <p className="text-foreground">
+                        <div className="fixed inset-0 flex items-center justify-center bg-background/70 z-50">
+                          <Loader2 className="h-16 w-16 animate-spin text-muted-foreground" />
+                          <p className="text-lg text-foreground mt-4">
                             {loadingStep === 1
                               ? "Analysing the query..."
                               : "Running the query..."}
