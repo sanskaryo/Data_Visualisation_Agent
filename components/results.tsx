@@ -1,117 +1,145 @@
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { DynamicChart } from './dynamic-chart';
+import { Loader2, ChevronDown, ChevronUp, BarChart2 } from 'lucide-react';
 import { Config, Result } from "@/lib/types";
-import { DynamicChart } from "./dynamic-chart"; // Import DynamicChart
-import { SkeletonCard } from "./skeleton-card";
-import {
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-  Table,
-} from "./ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 
-export const Results = ({
-  results,
-  columns,
-  chartConfig,
-}: {
+type ResultsProps = {
   results: Result[];
   columns: string[];
   chartConfig: Config | null;
-}) => {
-  const formatColumnTitle = (title: string) => {
-    return title
-      .split("_")
-      .map((word, index) =>
-        index === 0 ? word.charAt(0).toUpperCase() + word.slice(1) : word,
-      )
-      .join(" ");
+};
+
+export function Results({ results, columns, chartConfig }: ResultsProps) {
+  const [showAll, setShowAll] = useState(false);
+  const [insights, setInsights] = useState<string>('');
+  const [loadingInsights, setLoadingInsights] = useState(false);
+
+  useEffect(() => {
+    if (results.length > 0 && chartConfig) {
+      generateInsights();
+    }
+  }, [results, chartConfig]);
+
+  const generateInsights = async () => {
+    setLoadingInsights(true);
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: 'Provide a brief analysis of the data and chart, highlighting key insights and patterns.',
+          chartData: {
+            config: chartConfig,
+            results
+          }
+        })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setInsights(data.response);
+      }
+    } catch (error) {
+      console.error('Failed to generate insights:', error);
+    } finally {
+      setLoadingInsights(false);
+    }
   };
 
-  const formatCellValue = (column: string, value: any) => {
-    if (column.toLowerCase().includes("valuation")) {
-      const parsedValue = parseFloat(value);
-      if (isNaN(parsedValue)) {
-        return "";
-      }
-      const formattedValue = parsedValue.toFixed(2);
-      const trimmedValue = formattedValue.replace(/\.?0+$/, "");
-      return `$${trimmedValue}B`;
-    }
-    if (column.toLowerCase().includes("rate")) {
-      const parsedValue = parseFloat(value);
-      if (isNaN(parsedValue)) {
-        return "";
-      }
-      const percentage = (parsedValue * 100).toFixed(2);
-      return `${percentage}%`;
-    }
-    if (value instanceof Date) {
-      return value.toLocaleDateString();
-    }
-    return String(value);
-  };
+  const displayedResults = showAll ? results : results.slice(0, 5);
 
   return (
-    <div className="flex-grow flex flex-col">
-      <Tabs defaultValue="table" className="w-full flex-grow flex flex-col">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="table">Table</TabsTrigger>
-          <TabsTrigger
-            value="charts"
-            disabled={
-              Object.keys(results[0] || {}).length <= 1 || results.length < 2
-            }
-          >
-            Chart
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="table" className="flex-grow">
-          <div className="sm:min-h-[10px] relative">
-            <Table className="min-w-full divide-y divide-border">
-              <TableHeader className="bg-secondary sticky top-0 shadow-sm">
-                <TableRow>
-                  {columns.map((column, index) => (
-                    <TableHead
-                      key={index}
-                      className="px-6 py-3 text-left text-base font-medium text-muted-foreground uppercase tracking-wider"
-                    >
-                      {formatColumnTitle(column)}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody className="bg-card divide-y divide-border">
-                {results.map((company, index) => (
-                  <TableRow key={index} className="hover:bg-muted">
-                    {columns.map((column, cellIndex) => (
-                      <TableCell
-                        key={cellIndex}
-                        className="px-6 py-4 whitespace-nowrap text-base text-foreground"
-                      >
-                        {formatCellValue(
-                          column,
-                          company[column as keyof Result],
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-6"
+    >
+      {/* Chart Section */}
+      {chartConfig && (
+        <div className="bg-card rounded-lg p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <BarChart2 className="h-5 w-5 text-primary" />
+            <h3 className="text-lg font-semibold">Data Visualization</h3>
           </div>
-        </TabsContent>
-        <TabsContent value="charts" className="flex-grow overflow-auto">
-          <div className="mt-4">
-            {chartConfig && results.length > 0 ? (
-              <DynamicChart chartData={results} chartConfig={chartConfig} />
+          <div className="w-full aspect-[16/9]">
+            <DynamicChart chartData={results} chartConfig={chartConfig} />
+          </div>
+          
+          {/* Insights */}
+          <div className="mt-4 p-4 bg-muted rounded-lg">
+            <h4 className="font-medium mb-2">Key Insights</h4>
+            {loadingInsights ? (
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Analyzing data...</span>
+              </div>
             ) : (
-              <SkeletonCard />
+              <p className="text-sm text-muted-foreground">{insights}</p>
             )}
           </div>
-        </TabsContent>
-      </Tabs>
-    </div>
+        </div>
+      )}
+
+      {/* Results Table */}
+      <div className="bg-card rounded-lg p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">Results</h3>
+          <span className="text-sm text-muted-foreground">
+            {results.length} rows found
+          </span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="border-b">
+                {columns.map((column) => (
+                  <th
+                    key={column}
+                    className="text-left p-2 text-sm font-medium text-muted-foreground"
+                  >
+                    {column}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {displayedResults.map((result, i) => (
+                <tr
+                  key={i}
+                  className="border-b last:border-0 hover:bg-muted/50 transition-colors"
+                >
+                  {columns.map((column) => (
+                    <td key={column} className="p-2 text-sm">
+                      {result[column]?.toString() || '-'}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {results.length > 5 && (
+          <button
+            onClick={() => setShowAll(!showAll)}
+            className="mt-4 flex items-center gap-1 text-sm text-primary hover:text-primary/80"
+          >
+            {showAll ? (
+              <>
+                Show Less
+                <ChevronUp className="h-4 w-4" />
+              </>
+            ) : (
+              <>
+                Show All
+                <ChevronDown className="h-4 w-4" />
+              </>
+            )}
+          </button>
+        )}
+      </div>
+    </motion.div>
   );
-};
+}

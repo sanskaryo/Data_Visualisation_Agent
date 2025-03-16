@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, Suspense } from "react";
+import { motion } from "framer-motion";
 import {
   generateChartConfig,
   generateQuery,
   runGenerateSQLQuery,
+  getTableInfo
 } from "./actions";
 import { Config, Result } from "@/lib/types";
 import { Loader2 } from "lucide-react";
@@ -15,9 +16,13 @@ import { Results } from "@/components/results";
 import { SuggestedQueries } from "@/components/suggested-queries";
 import { QueryViewer } from "@/components/query-viewer";
 import { Search } from "@/components/search";
-import { Header } from "@/components/header";
+import { FileUpload } from '@/components/file-upload';
+import { ChatPanel } from '@/components/chat-panel';
 
-export default function Page() {
+export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
+
+export default function Home() {
   const [inputValue, setInputValue] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [results, setResults] = useState<Result[]>([]);
@@ -26,134 +31,158 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(1);
   const [chartConfig, setChartConfig] = useState<Config | null>(null);
+  const [currentTable, setCurrentTable] = useState<string | null>(null);
+  const [tableInfo, setTableInfo] = useState<any>(null);
 
   const handleSubmit = async (suggestion?: string) => {
     const question = suggestion ?? inputValue;
-    if (inputValue.length === 0 && !suggestion) return;
-    clearExistingData();
-    if (question.trim()) {
-      setSubmitted(true);
-    }
+    if (!question.trim()) return;
+
+    setSubmitted(true);
     setLoading(true);
     setLoadingStep(1);
     setActiveQuery("");
+    
     try {
-      const query = await generateQuery(question);
-      if (query === undefined) {
-        toast.error("An error occurred. Please try again.");
+      if (!currentTable) {
+        toast.error("Please upload a CSV file first");
         setLoading(false);
         return;
       }
+
+      const query = await generateQuery(question, currentTable);
+      if (!query) {
+        toast.error("Failed to generate query. Please try again.");
+        setLoading(false);
+        return;
+      }
+
       setActiveQuery(query);
       setLoadingStep(2);
-      const companies = await runGenerateSQLQuery(query);
-      const columns = companies.length > 0 ? Object.keys(companies[0]) : [];
-      setResults(companies);
+
+      const data = await runGenerateSQLQuery(query);
+      const columns = data.length > 0 ? Object.keys(data[0]) : [];
+      
+      setResults(data);
       setColumns(columns);
+      
+      const chartGeneration = await generateChartConfig(data, question);
+      setChartConfig(chartGeneration.config);
+      
       setLoading(false);
-      const generation = await generateChartConfig(companies, question);
-      setChartConfig(generation.config);
-    } catch (e) {
+    } catch (error) {
+      console.error('Query error:', error);
       toast.error("An error occurred. Please try again.");
       setLoading(false);
     }
   };
 
-  const handleSuggestionClick = async (suggestion: string) => {
-    setInputValue(suggestion);
+  const handleUploadSuccess = async (data: any) => {
+    setCurrentTable(data.tableName);
+    const info = await getTableInfo(data.tableName);
+    setTableInfo(info);
+    toast.success(`Uploaded ${data.rowCount} rows of data`);
+  };
+
+  const handleChatMessage = async (message: string) => {
     try {
-      await handleSubmit(suggestion);
-    } catch (e) {
-      toast.error("An error occurred. Please try again.");
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message,
+          chartData: {
+            config: chartConfig,
+            results
+          },
+          tableInfo
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      return data.response;
+
+    } catch (error) {
+      console.error('Chat error:', error);
+      toast.error('Failed to get AI response');
+      return 'Sorry, I encountered an error while processing your request.';
     }
   };
 
-  const clearExistingData = () => {
-    setActiveQuery("");
-    setResults([]);
-    setColumns([]);
-    setChartConfig(null);
+  const handleSuggestionClick = (suggestion: string) => {
+    setInputValue(suggestion);
+    handleSubmit(suggestion);
   };
 
   const handleClear = () => {
     setSubmitted(false);
     setInputValue("");
-    clearExistingData();
+    setResults([]);
+    setColumns([]);
+    setChartConfig(null);
+    setActiveQuery("");
   };
 
   return (
-    <div className="bg-neutral-50 dark:bg-neutral-900 flex items-start justify-center p-4 sm:p-8">
-      <div className="w-full max-w-6xl min-h-dvh sm:min-h-0 flex flex-col">
-        <motion.div
-          className="bg-card rounded-xl sm:border sm:border-border flex-grow flex flex-col"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-        >
-          <div className="p-4 sm:p-8 flex flex-col flex-grow">
-            <Header handleClear={handleClear} />
-            <Search
-              handleClear={handleClear}
-              handleSubmit={handleSubmit}
-              inputValue={inputValue}
-              setInputValue={setInputValue}
-              submitted={submitted}
-            />
-            <div
-              id="main-container"
-              className="flex-grow flex flex-col sm:min-h-[420px]"
-            >
-              <div className="flex-grow h-full">
-                <AnimatePresence mode="wait">
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8">
+        <ProjectInfo />
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* File Upload */}
+            <div className="bg-card rounded-lg p-6">
+              <h2 className="text-xl font-semibold mb-4">Upload Your Data</h2>
+              <FileUpload onUploadSuccess={handleUploadSuccess} />
+            </div>
+
+            {/* Search and Results */}
+            <div className="bg-card rounded-lg p-6">
+              <Search
+                handleSubmit={handleSubmit}
+                inputValue={inputValue}
+                setInputValue={setInputValue}
+              />
+
+              {loading ? (
+                <div className="flex items-center justify-center p-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="ml-3 text-lg">
+                    {loadingStep === 1 ? "Analyzing query..." : "Running query..."}
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-6 space-y-6">
                   {!submitted ? (
-                    <SuggestedQueries
-                      handleSuggestionClick={handleSuggestionClick}
-                    />
+                    <SuggestedQueries onSuggestionClick={handleSuggestionClick} />
                   ) : (
-                    <motion.div
-                      key="results"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      layout
-                      className="sm:h-full min-h-[400px] flex flex-col"
-                    >
-                      {activeQuery.length > 0 && (
-                        <QueryViewer
-                          activeQuery={activeQuery}
-                          inputValue={inputValue}
-                        />
-                      )}
-                      {loading ? (
-                        <div className="fixed inset-0 flex items-center justify-center bg-background/70 z-50">
-                          <Loader2 className="h-16 w-16 animate-spin text-muted-foreground" />
-                          <p className="text-lg text-foreground mt-4">
-                            {loadingStep === 1
-                              ? "Analysing the query..."
-                              : "Running the query..."}
-                          </p>
-                        </div>
-                      ) : results.length === 0 ? (
-                        <div className="flex-grow flex items-center justify-center">
-                          <p className="text-center text-muted-foreground">
-                            No results found.
-                          </p>
-                        </div>
-                      ) : (
+                    <>
+                      {activeQuery && <QueryViewer query={activeQuery} />}
+                      <Suspense>
                         <Results
                           results={results}
-                          chartConfig={chartConfig}
                           columns={columns}
+                          chartConfig={chartConfig}
                         />
-                      )}
-                    </motion.div>
+                      </Suspense>
+                    </>
                   )}
-                </AnimatePresence>
-              </div>
+                </div>
+              )}
             </div>
           </div>
-          <ProjectInfo />
-        </motion.div>
+
+          {/* Chat Panel */}
+          <div className="lg:col-span-1 h-[calc(100vh-2rem)]">
+            <ChatPanel
+              onSendMessage={handleChatMessage}
+              chartData={chartConfig ? { config: chartConfig, results } : undefined}
+              tableInfo={tableInfo}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
