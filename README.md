@@ -1,6 +1,6 @@
-# 📊 GLA University Placement Data Analysis
+# 📊  Data Analysis and visualisation ai agent
 
-This project is a web application designed to analyze and visualize placement statistics for GLA University. It enables users to explore placement data, student performance, and company hiring trends through interactive charts and queries.
+This project is a web application designed to analyze and visualize csv and other files It enables users to explore placement data, student performance, and company hiring trends through interactive charts and queries.
 
 ---
 
